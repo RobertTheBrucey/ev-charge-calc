@@ -1,0 +1,9 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'
+
+/build-info.json
+  Cache-Control: no-store

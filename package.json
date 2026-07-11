@@ -1,0 +1,11 @@
+{
+  "name": "ev-charge-calc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website to help with calculating how long it will take to charge your EV",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "npx serve ."
+  },
+  "license": "MIT"
+}

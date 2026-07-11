@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — EV Charge Calculator</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>Privacy policy</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>What we store</h2>
+      <p>
+        This site stores your charging inputs (state of charge, target charge, battery capacity,
+        charger rate, favourite chargers, advanced settings, and simulate-charge status) in a single
+        first-party cookie on your device, named <code>evcc_prefs</code>. That's it.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>What we don't store</h2>
+      <p>
+        No personal data — no name, email, or location. No analytics, no tracking scripts, and no
+        third-party cookies of any kind. This site is fully static: there is no server-side database
+        and no account system, so nothing you enter is ever transmitted anywhere. A strict
+        <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP" rel="noopener">Content Security Policy</a>
+        on every page blocks this site from loading third-party scripts, fonts, or making network
+        requests to anywhere other than itself.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Why this doesn't need a cookie banner</h2>
+      <p>
+        The <code>evcc_prefs</code> cookie exists purely to remember your own charging preferences
+        between visits — it's "strictly necessary" for the site's core function, not used for tracking
+        or advertising, and never shared with anyone. Under the ePrivacy Directive, strictly necessary
+        cookies like this are exempt from requiring consent.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Production vs. staging</h2>
+      <p>
+        The cookie is host-only (no <code>Domain</code> attribute), so the production site and the
+        staging environment each keep their own independent copy — your data is never shared between them.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Simulate charge</h2>
+      <p>
+        The "simulate charge" feature estimates your charge level using your device's clock. If your
+        device's clock is wrong, the estimate will be too — there's no way around this for a feature
+        that works without any connection to your EV or charger.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Clearing your data</h2>
+      <p>
+        You can delete everything this site has stored on your device at any time using the
+        <strong>Clear saved data</strong> button on the <a href="/">calculator page</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p><a href="/">Back to calculator</a></p>
+    <span id="build-badge" class="build-badge" hidden></span>
+    <p class="license">Open source under the MIT license.</p>
+  </footer>
+
+  <script type="module" src="/js/badge.js"></script>
+</body>
+</html>
