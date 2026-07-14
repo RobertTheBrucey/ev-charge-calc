@@ -229,7 +229,9 @@ async function initVehicles() {
   }
 }
 
-el.vehicleSearch.addEventListener('change', () => {
+// 'input' (not 'change') because selecting a native <datalist> suggestion
+// doesn't reliably fire 'change' until the field loses focus in some browsers.
+el.vehicleSearch.addEventListener('input', () => {
   const vehicle = vehiclesById.get(el.vehicleSearch.value);
   if (!vehicle) return;
   state = applyVehicle(state, vehicle);
