@@ -1,10 +1,9 @@
-const CACHE_NAME = 'evcc-v2';
+const CACHE_NAME = 'evcc-v3';
 
 const CORE_ASSETS = [
   '/',
-  '/index.html',
-  '/privacy.html',
-  '/404.html',
+  '/privacy',
+  '/404',
   '/css/style.css',
   '/js/main.js',
   '/js/calc.js',
@@ -22,8 +21,16 @@ const CORE_ASSETS = [
   '/icons/icon-512.png',
 ];
 
+// Precache each asset independently (rather than cache.addAll, which fails
+// the whole install if even one URL 404s, redirects, or is momentarily
+// unreachable) so one bad entry can never permanently strand visitors on an
+// old, never-updating service worker again.
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => Promise.all(CORE_ASSETS.map((url) => cache.add(url).catch(() => {}))))
+  );
   self.skipWaiting();
 });
 
