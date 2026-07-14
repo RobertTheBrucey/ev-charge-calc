@@ -18,7 +18,12 @@ const el = {
   chargerRate: document.getElementById('charger-rate'),
   target: document.getElementById('target'),
 
-  resultText: document.getElementById('result-text'),
+  resultMessage: document.getElementById('result-message'),
+  resultStats: document.getElementById('result-stats'),
+  stat1Label: document.getElementById('stat-1-label'),
+  stat1Value: document.getElementById('stat-1-value'),
+  stat2Label: document.getElementById('stat-2-label'),
+  stat2Value: document.getElementById('stat-2-value'),
   simToggleBtn: document.getElementById('sim-toggle-btn'),
 
   favouriteSelect: document.getElementById('favourite-select'),
@@ -83,9 +88,24 @@ function currentInputs() {
   };
 }
 
+function showResultStats(label1, value1, label2, value2) {
+  el.resultMessage.hidden = true;
+  el.resultStats.hidden = false;
+  el.stat1Label.textContent = label1;
+  el.stat1Value.textContent = value1;
+  el.stat2Label.textContent = label2;
+  el.stat2Value.textContent = value2;
+}
+
+function showResultMessage(text) {
+  el.resultStats.hidden = true;
+  el.resultMessage.hidden = false;
+  el.resultMessage.textContent = text;
+}
+
 /**
- * Renders the single-line brief estimate and keeps the Start/End Simulation
- * button in sync with whether a simulation is currently active.
+ * Renders the two-tile estimate (or a fallback message) and keeps the
+ * Start/End Simulation button in sync with whether a simulation is active.
  */
 function renderEstimate() {
   if (state.sim.active) {
@@ -100,11 +120,11 @@ function renderEstimate() {
     });
 
     if (!tick) {
-      el.resultText.textContent = '—';
+      showResultMessage('—');
     } else if (tick.done) {
-      el.resultText.textContent = `${tick.liveSocPct.toFixed(1)}% | Target reached`;
+      showResultStats('Charge level', `${tick.liveSocPct.toFixed(1)}%`, 'Status', 'Target reached');
     } else {
-      el.resultText.textContent = `${tick.liveSocPct.toFixed(1)}% | ${formatChargeDuration(tick.remainingTimeHours)} remaining`;
+      showResultStats('Charge level', `${tick.liveSocPct.toFixed(1)}%`, 'Remaining', formatChargeDuration(tick.remainingTimeHours));
     }
     return;
   }
@@ -113,15 +133,16 @@ function renderEstimate() {
 
   const result = calculateChargeTime(currentInputs());
   if (!result.ok) {
-    el.resultText.textContent =
+    showResultMessage(
       result.reason === 'target-not-above-current'
         ? 'Target is at or below current charge.'
-        : 'Enter valid charge details.';
+        : 'Enter valid charge details.'
+    );
     el.simToggleBtn.disabled = true;
     return;
   }
 
-  el.resultText.textContent = `${formatChargeDuration(result.timeHours)} | ${formatClockTime(result.finishTime)}`;
+  showResultStats('Time remaining', formatChargeDuration(result.timeHours), 'Finish time', formatClockTime(result.finishTime));
   el.simToggleBtn.disabled = false;
 }
 

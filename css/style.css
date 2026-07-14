@@ -210,10 +210,59 @@ input:read-only {
   border-color: var(--accent);
 }
 
-.result-brief {
-  font-size: 1.3rem;
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.result-header h2 {
+  margin: 0;
+}
+
+.result-header .btn {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.result-message {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.result-stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.result-stats[hidden] {
+  display: none;
+}
+
+.stat-tile {
+  flex: 1 1 8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 1.4rem;
   font-weight: 700;
-  margin: 0 0 0.5rem;
 }
 
 details.card summary {

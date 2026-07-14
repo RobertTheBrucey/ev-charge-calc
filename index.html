@@ -33,9 +33,21 @@
     </details>
 
     <section class="card result-card" aria-live="polite">
-      <h2>Charge Estimate:</h2>
-      <p id="result-text" class="result-brief"></p>
-      <button type="button" id="sim-toggle-btn" class="btn">Start Simulation</button>
+      <div class="result-header">
+        <h2>Charge Estimate:</h2>
+        <button type="button" id="sim-toggle-btn" class="btn">Start Simulation</button>
+      </div>
+      <p id="result-message" class="result-message" hidden></p>
+      <div id="result-stats" class="result-stats">
+        <div class="stat-tile">
+          <span id="stat-1-label" class="stat-label"></span>
+          <span id="stat-1-value" class="stat-value"></span>
+        </div>
+        <div class="stat-tile">
+          <span id="stat-2-label" class="stat-label"></span>
+          <span id="stat-2-value" class="stat-value"></span>
+        </div>
+      </div>
     </section>
 
     <section class="card" aria-labelledby="inputs-heading">
