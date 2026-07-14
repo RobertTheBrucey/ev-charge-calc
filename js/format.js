@@ -9,7 +9,11 @@ export function formatChargeDuration(hours) {
 }
 
 export function formatClockTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes}${ampm}`;
 }
 
 export function formatAgo(deltaMs) {

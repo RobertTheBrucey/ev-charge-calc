@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Privacy Policy — EV Charge Calculator</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1b7a4d" />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -61,6 +66,15 @@
     </section>
 
     <section class="card">
+      <h2>Offline support</h2>
+      <p>
+        This site can be installed and used offline. That works by caching the site's own static
+        files (HTML, CSS, JavaScript, the vehicle list) in your browser's local cache storage —
+        no additional personal data is collected or sent anywhere to enable this.
+      </p>
+    </section>
+
+    <section class="card">
       <h2>Clearing your data</h2>
       <p>
         You can delete everything this site has stored on your device at any time using the
@@ -72,9 +86,10 @@
   <footer class="site-footer">
     <p><a href="/">Back to calculator</a></p>
     <span id="build-badge" class="build-badge" hidden></span>
-    <p class="license">Open source under the MIT license.</p>
+    <p class="license"><a href="https://github.com/RobertTheBrucey/ev-charge-calc" rel="noopener">Open source</a> under the MIT license.</p>
   </footer>
 
   <script type="module" src="/js/badge.js"></script>
+  <script type="module" src="/js/pwa.js"></script>
 </body>
 </html>

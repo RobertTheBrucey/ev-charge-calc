@@ -41,6 +41,7 @@ body {
   max-width: 640px;
   margin: 0 auto;
   padding: 1.5rem 0 0.5rem;
+  text-align: center;
 }
 
 .site-header h1 {
@@ -96,6 +97,16 @@ main {
 
 .field-row .field {
   flex: 1 1 12rem;
+  margin-bottom: 0;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.field-grid .field {
   margin-bottom: 0;
 }
 
@@ -163,15 +174,10 @@ input:read-only {
   border-color: var(--accent);
 }
 
-.result-text {
-  font-size: 1.15rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.result-finish {
-  margin: 0.25rem 0 0;
-  color: var(--muted);
+.result-brief {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
 }
 
 details.card summary {

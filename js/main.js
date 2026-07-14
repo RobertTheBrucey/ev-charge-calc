@@ -17,7 +17,7 @@ const el = {
   target: document.getElementById('target'),
 
   resultText: document.getElementById('result-text'),
-  resultFinish: document.getElementById('result-finish'),
+  simToggleBtn: document.getElementById('sim-toggle-btn'),
 
   favouriteSelect: document.getElementById('favourite-select'),
   newChargerName: document.getElementById('new-charger-name'),
@@ -25,14 +25,11 @@ const el = {
   deleteFavouriteBtn: document.getElementById('delete-favourite-btn'),
   favouriteMessage: document.getElementById('favourite-message'),
 
-  simStartBtn: document.getElementById('sim-start-btn'),
-  simStopBtn: document.getElementById('sim-stop-btn'),
-  simStatus: document.getElementById('sim-status'),
-
   advVoltage: document.getElementById('adv-voltage'),
   advCurrent: document.getElementById('adv-current'),
   advMaxCharge: document.getElementById('adv-max-charge'),
 
+  vehicleLookup: document.getElementById('vehicle-lookup'),
   vehicleSearch: document.getElementById('vehicle-search'),
   vehicleList: document.getElementById('vehicle-list'),
 
@@ -84,23 +81,46 @@ function currentInputs() {
   };
 }
 
-function renderResult() {
-  const inputs = currentInputs();
-  const result = calculateChargeTime(inputs);
+/**
+ * Renders the single-line brief estimate and keeps the Start/End Simulation
+ * button in sync with whether a simulation is currently active.
+ */
+function renderEstimate() {
+  if (state.sim.active) {
+    el.simToggleBtn.textContent = 'End Simulation';
+    el.simToggleBtn.disabled = false;
 
-  if (!result.ok) {
-    el.resultText.textContent =
-      result.reason === 'target-not-above-current'
-        ? 'Target is at or below current charge — nothing to calculate.'
-        : 'Enter valid battery capacity, charge levels, and charger rate.';
-    el.resultFinish.textContent = '';
-    el.simStartBtn.disabled = true;
+    const tick = computeSimTick({
+      sim: state.sim,
+      batteryKwh: state.batteryKwh,
+      chargerRateKw: state.chargerRateKw,
+      maxChargeKw: state.advanced.maxChargeKw,
+    });
+
+    if (!tick) {
+      el.resultText.textContent = '—';
+    } else if (tick.done) {
+      el.resultText.textContent = `${tick.liveSocPct.toFixed(1)}% | Target reached`;
+    } else {
+      el.resultText.textContent = `${tick.liveSocPct.toFixed(1)}% | ${formatChargeDuration(tick.remainingTimeHours)} remaining`;
+    }
     return;
   }
 
-  el.resultText.textContent = `Charging will take about ${formatChargeDuration(result.timeHours)}.`;
-  el.resultFinish.textContent = `Estimated finish: ${formatClockTime(result.finishTime)}`;
-  el.simStartBtn.disabled = state.sim.active;
+  el.simToggleBtn.textContent = 'Start Simulation';
+
+  const result = calculateChargeTime(currentInputs());
+  if (!result.ok) {
+    el.resultText.textContent =
+      result.reason === 'target-not-above-current'
+        ? 'Target is at or below current charge.'
+        : 'Enter valid charge details.';
+    el.simToggleBtn.disabled = true;
+    return;
+  }
+
+  el.resultText.textContent = `${formatChargeDuration(result.timeHours)} | ${formatClockTime(result.finishTime)}`;
+  el.simToggleBtn.disabled = false;
 }
 
 function syncStateFromForm() {
@@ -115,7 +135,7 @@ function syncStateFromForm() {
 
 function onCoreInputChange() {
   syncStateFromForm();
-  renderResult();
+  renderEstimate();
   persist();
 }
 
@@ -138,7 +158,7 @@ createAdvancedController({
         maxChargeKw: state.advanced.maxChargeKw,
       },
     };
-    renderResult();
+    renderEstimate();
     persist();
   },
 });
@@ -152,7 +172,7 @@ el.advMaxCharge.addEventListener('input', () => {
       maxChargeKw: raw === '' ? null : Number(raw),
     },
   };
-  renderResult();
+  renderEstimate();
   persist();
 });
 
@@ -163,7 +183,7 @@ el.favouriteSelect.addEventListener('change', () => {
   state = selectFavourite(state, id);
   renderForm();
   renderFavourites();
-  renderResult();
+  renderEstimate();
   persist({ immediate: true });
 });
 
@@ -214,48 +234,18 @@ el.vehicleSearch.addEventListener('change', () => {
   if (!vehicle) return;
   state = applyVehicle(state, vehicle);
   renderForm();
-  renderResult();
+  renderEstimate();
   persist({ immediate: true });
+  // Collapse the lookup again once a vehicle has been picked.
+  el.vehicleLookup.open = false;
 });
 
 // --- Simulate charge ---
 
-function renderSimStatus() {
-  if (!state.sim.active) {
-    el.simStatus.textContent = '';
-    el.simStartBtn.hidden = false;
-    el.simStopBtn.hidden = true;
-    return;
-  }
-
-  el.simStartBtn.hidden = true;
-  el.simStopBtn.hidden = false;
-
-  const tick = computeSimTick({
-    sim: state.sim,
-    batteryKwh: state.batteryKwh,
-    chargerRateKw: state.chargerRateKw,
-    maxChargeKw: state.advanced.maxChargeKw,
-  });
-
-  if (!tick) {
-    el.simStatus.textContent = '';
-    return;
-  }
-
-  if (tick.done) {
-    el.simStatus.textContent = `Simulated charge: ${tick.liveSocPct.toFixed(1)}% — target reached.`;
-  } else {
-    el.simStatus.textContent = `Simulated charge: ${tick.liveSocPct.toFixed(1)}% — about ${formatChargeDuration(
-      tick.remainingTimeHours
-    )} remaining.`;
-  }
-}
-
 function startSimTimer() {
   if (simTimer) clearInterval(simTimer);
-  simTimer = setInterval(renderSimStatus, 1000);
-  renderSimStatus();
+  simTimer = setInterval(renderEstimate, 1000);
+  renderEstimate();
 }
 
 function stopSimTimer() {
@@ -265,27 +255,26 @@ function stopSimTimer() {
   }
 }
 
-el.simStartBtn.addEventListener('click', () => {
+el.simToggleBtn.addEventListener('click', () => {
+  if (state.sim.active) {
+    const tick = computeSimTick({
+      sim: state.sim,
+      batteryKwh: state.batteryKwh,
+      chargerRateKw: state.chargerRateKw,
+      maxChargeKw: state.advanced.maxChargeKw,
+    });
+    stopSimTimer();
+    state = stopSim(state, tick ? tick.liveSocPct : NaN);
+    renderForm();
+    renderEstimate();
+    persist({ immediate: true });
+    return;
+  }
+
   syncStateFromForm();
   state = startSim(state);
   persist({ immediate: true });
   startSimTimer();
-  renderResult();
-});
-
-el.simStopBtn.addEventListener('click', () => {
-  const tick = computeSimTick({
-    sim: state.sim,
-    batteryKwh: state.batteryKwh,
-    chargerRateKw: state.chargerRateKw,
-    maxChargeKw: state.advanced.maxChargeKw,
-  });
-  stopSimTimer();
-  state = stopSim(state, tick ? tick.liveSocPct : NaN);
-  renderForm();
-  renderResult();
-  renderSimStatus();
-  persist({ immediate: true });
 });
 
 // --- Clear cookie ---
@@ -296,8 +285,7 @@ el.clearCookieBtn.addEventListener('click', () => {
   state = clearState();
   renderForm();
   renderFavourites();
-  renderResult();
-  renderSimStatus();
+  renderEstimate();
   el.favouriteMessage.textContent = '';
 });
 
@@ -306,9 +294,8 @@ el.clearCookieBtn.addEventListener('click', () => {
 function init() {
   renderForm();
   renderFavourites();
-  renderResult();
   if (state.sim.active) startSimTimer();
-  else renderSimStatus();
+  else renderEstimate();
   initVehicles();
 }
 
