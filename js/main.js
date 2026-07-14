@@ -3,12 +3,14 @@ import { calculateChargeTime } from './calc.js';
 import { formatChargeDuration, formatClockTime } from './format.js';
 import { createAdvancedController } from './advanced.js';
 import { addFavourite, deleteFavourite, selectFavourite } from './favourites.js';
-import { loadVehicles, vehicleLabel, applyVehicle } from './vehicles.js';
+import { loadVehicles, vehicleLabel, applyVehicle, searchVehicles } from './vehicles.js';
 import { computeSimTick, startSim, stopSim } from './simulate.js';
 
 let state = loadState();
 let simTimer = null;
-let vehiclesById = new Map();
+let vehicles = [];
+let suggestionMatches = [];
+let activeSuggestionIndex = -1;
 
 const el = {
   batteryKwh: document.getElementById('battery-kwh'),
@@ -31,7 +33,7 @@ const el = {
 
   vehicleLookup: document.getElementById('vehicle-lookup'),
   vehicleSearch: document.getElementById('vehicle-search'),
-  vehicleList: document.getElementById('vehicle-list'),
+  vehicleSuggestions: document.getElementById('vehicle-suggestions'),
 
   clearCookieBtn: document.getElementById('clear-cookie-btn'),
 };
@@ -215,31 +217,97 @@ el.deleteFavouriteBtn.addEventListener('click', () => {
 });
 
 // --- Vehicles ---
+//
+// This is a hand-rolled suggestion list rather than a native <datalist>.
+// Chrome's datalist popup turned out to be unreliable in practice (no
+// suggestions shown at all in some desktop Chrome profiles, even with a
+// correctly populated datalist and no console errors) — building our own
+// gives consistent behaviour across every browser.
 
 async function initVehicles() {
-  const vehicles = await loadVehicles();
-  vehiclesById = new Map();
-  el.vehicleList.innerHTML = '';
-  for (const vehicle of vehicles) {
-    const label = vehicleLabel(vehicle);
-    vehiclesById.set(label, vehicle);
-    const option = document.createElement('option');
-    option.value = label;
-    el.vehicleList.appendChild(option);
+  vehicles = await loadVehicles();
+}
+
+function renderSuggestions(matches) {
+  suggestionMatches = matches.slice(0, 8);
+  activeSuggestionIndex = -1;
+  el.vehicleSuggestions.innerHTML = '';
+
+  if (suggestionMatches.length === 0) {
+    el.vehicleSuggestions.hidden = true;
+    el.vehicleSearch.setAttribute('aria-expanded', 'false');
+    el.vehicleSearch.removeAttribute('aria-activedescendant');
+    return;
+  }
+
+  suggestionMatches.forEach((vehicle, index) => {
+    const item = document.createElement('li');
+    item.id = `vehicle-suggestion-${index}`;
+    item.className = 'suggestion-item';
+    item.setAttribute('role', 'option');
+    item.textContent = vehicleLabel(vehicle);
+    // mousedown (not click) + preventDefault so the input never blurs,
+    // avoiding a race between the click landing and the list being hidden.
+    item.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      selectVehicle(vehicle);
+    });
+    el.vehicleSuggestions.appendChild(item);
+  });
+
+  el.vehicleSuggestions.hidden = false;
+  el.vehicleSearch.setAttribute('aria-expanded', 'true');
+}
+
+function updateActiveSuggestion() {
+  const items = el.vehicleSuggestions.querySelectorAll('.suggestion-item');
+  items.forEach((item, index) => item.classList.toggle('active', index === activeSuggestionIndex));
+  const active = items[activeSuggestionIndex];
+  if (active) {
+    el.vehicleSearch.setAttribute('aria-activedescendant', active.id);
+    active.scrollIntoView({ block: 'nearest' });
+  } else {
+    el.vehicleSearch.removeAttribute('aria-activedescendant');
   }
 }
 
-// 'input' (not 'change') because selecting a native <datalist> suggestion
-// doesn't reliably fire 'change' until the field loses focus in some browsers.
-el.vehicleSearch.addEventListener('input', () => {
-  const vehicle = vehiclesById.get(el.vehicleSearch.value);
-  if (!vehicle) return;
+function selectVehicle(vehicle) {
+  el.vehicleSearch.value = vehicleLabel(vehicle);
   state = applyVehicle(state, vehicle);
   renderForm();
   renderEstimate();
   persist({ immediate: true });
+  renderSuggestions([]);
   // Collapse the lookup again once a vehicle has been picked.
   el.vehicleLookup.open = false;
+}
+
+el.vehicleSearch.addEventListener('input', () => {
+  const query = el.vehicleSearch.value.trim();
+  renderSuggestions(query ? searchVehicles(vehicles, query) : []);
+});
+
+el.vehicleSearch.addEventListener('keydown', (event) => {
+  if (el.vehicleSuggestions.hidden) return;
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, suggestionMatches.length - 1);
+    updateActiveSuggestion();
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+    updateActiveSuggestion();
+  } else if (event.key === 'Enter' && activeSuggestionIndex >= 0) {
+    event.preventDefault();
+    selectVehicle(suggestionMatches[activeSuggestionIndex]);
+  } else if (event.key === 'Escape') {
+    renderSuggestions([]);
+  }
+});
+
+el.vehicleSearch.addEventListener('blur', () => {
+  renderSuggestions([]);
 });
 
 // --- Simulate charge ---
