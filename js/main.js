@@ -2,7 +2,7 @@ import { loadState, saveState, clearState } from './storage.js';
 import { calculateChargeTime } from './calc.js';
 import { formatChargeDuration, formatClockTime } from './format.js';
 import { createAdvancedController } from './advanced.js';
-import { addFavourite, deleteFavourite, selectFavourite } from './favourites.js';
+import { addFavourite, updateFavourite, deleteFavourite, selectFavourite } from './favourites.js';
 import { loadVehicles, vehicleLabel, applyVehicle, searchVehicles } from './vehicles.js';
 import { computeSimTick, startSim, stopSim } from './simulate.js';
 
@@ -27,13 +27,14 @@ const el = {
   simToggleBtn: document.getElementById('sim-toggle-btn'),
 
   favouriteSelect: document.getElementById('favourite-select'),
+  updateFavouriteBtn: document.getElementById('update-favourite-btn'),
   newChargerName: document.getElementById('new-charger-name'),
   addFavouriteBtn: document.getElementById('add-favourite-btn'),
   deleteFavouriteBtn: document.getElementById('delete-favourite-btn'),
   favouriteMessage: document.getElementById('favourite-message'),
 
   advVoltage: document.getElementById('adv-voltage'),
-  advCurrent: document.getElementById('adv-current'),
+  chargerCurrent: document.getElementById('charger-current'),
   advMaxCharge: document.getElementById('adv-max-charge'),
 
   vehicleLookup: document.getElementById('vehicle-lookup'),
@@ -56,7 +57,7 @@ function renderForm() {
   el.chargerRate.value = state.chargerRateKw;
   el.target.value = state.target;
   el.advVoltage.value = state.advanced.voltage;
-  el.advCurrent.value = state.advanced.current ?? '';
+  el.chargerCurrent.value = state.advanced.current ?? '';
   el.advMaxCharge.value = state.advanced.maxChargeKw ?? '';
 }
 
@@ -74,8 +75,8 @@ function renderFavourites() {
     el.favouriteSelect.appendChild(opt);
   }
   el.favouriteSelect.value = state.activeChargerId ?? '';
+  el.updateFavouriteBtn.disabled = !state.activeChargerId;
   el.deleteFavouriteBtn.disabled = !state.activeChargerId;
-  el.chargerRate.readOnly = Boolean(state.activeChargerId);
 }
 
 function currentInputs() {
@@ -169,7 +170,7 @@ el.chargerRate.addEventListener('input', onCoreInputChange);
 
 createAdvancedController({
   voltageInput: el.advVoltage,
-  currentInput: el.advCurrent,
+  currentInput: el.chargerCurrent,
   chargerRateInput: el.chargerRate,
   onChange: () => {
     state = {
@@ -177,7 +178,7 @@ createAdvancedController({
       chargerRateKw: Number(el.chargerRate.value),
       advanced: {
         voltage: Number(el.advVoltage.value),
-        current: el.advCurrent.value === '' ? null : Number(el.advCurrent.value),
+        current: el.chargerCurrent.value === '' ? null : Number(el.chargerCurrent.value),
         maxChargeKw: state.advanced.maxChargeKw,
       },
     };
@@ -207,6 +208,20 @@ el.favouriteSelect.addEventListener('change', () => {
   renderForm();
   renderFavourites();
   renderEstimate();
+  persist({ immediate: true });
+});
+
+el.updateFavouriteBtn.addEventListener('click', () => {
+  if (!state.activeChargerId) return;
+  const rateKw = Number(el.chargerRate.value);
+  const result = updateFavourite(state, state.activeChargerId, rateKw);
+  if (!result.ok) {
+    el.favouriteMessage.textContent = 'Enter a valid charger rate before updating.';
+    return;
+  }
+  state = result.state;
+  el.favouriteMessage.textContent = '';
+  renderFavourites();
   persist({ immediate: true });
 });
 

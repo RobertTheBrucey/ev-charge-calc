@@ -73,6 +73,12 @@
           <label for="target">Target Charge (%)</label>
           <input type="number" id="target" min="0" max="100" step="1" inputmode="numeric" />
         </div>
+
+        <div class="field">
+          <label for="charger-current">Charger Current (A)</label>
+          <input type="number" id="charger-current" min="0" step="0.1" inputmode="decimal" />
+          <p class="hint">Linked to Charger Rate (kW) via the battery voltage in Advanced.</p>
+        </div>
       </div>
     </section>
 
@@ -81,7 +87,11 @@
 
       <div class="field">
         <label for="favourite-select">Active charger</label>
-        <select id="favourite-select"></select>
+        <div class="select-row">
+          <select id="favourite-select"></select>
+          <button type="button" id="update-favourite-btn" class="btn" disabled>Update</button>
+          <button type="button" id="delete-favourite-btn" class="btn btn-danger" disabled>Delete</button>
+        </div>
       </div>
 
       <div class="field-row">
@@ -92,7 +102,6 @@
         <button type="button" id="add-favourite-btn" class="btn">Save</button>
       </div>
 
-      <button type="button" id="delete-favourite-btn" class="btn btn-danger" disabled>Remove selected favourite</button>
       <p id="favourite-message" class="message" role="status"></p>
     </section>
 
@@ -102,12 +111,6 @@
       <div class="field">
         <label for="adv-voltage">EV Battery voltage (V)</label>
         <input type="number" id="adv-voltage" min="1" step="1" inputmode="decimal" />
-      </div>
-
-      <div class="field">
-        <label for="adv-current">EV Charger current (A)</label>
-        <input type="number" id="adv-current" min="0" step="0.1" inputmode="decimal" />
-        <p class="hint">Linked to Charger Rate (kW) above via the battery voltage.</p>
       </div>
 
       <div class="field">

@@ -18,6 +18,14 @@ export function addFavourite(state, { name, rateKw, voltage = null, current = nu
   };
 }
 
+export function updateFavourite(state, id, rateKw) {
+  if (!Number.isFinite(rateKw) || rateKw <= 0) {
+    return { ok: false, reason: 'invalid-input', state };
+  }
+  const chargers = state.chargers.map((c) => (c.id === id ? { ...c, rateKw } : c));
+  return { ok: true, state: { ...state, chargers, chargerRateKw: rateKw } };
+}
+
 export function deleteFavourite(state, id) {
   const chargers = state.chargers.filter((c) => c.id !== id);
   if (state.activeChargerId === id) {
